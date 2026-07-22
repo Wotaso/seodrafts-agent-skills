@@ -22,6 +22,16 @@ Choose the host's strongest publishing surface:
 4. Publishing runs through an event-driven content PR, CMS API publish, build hook, authenticated webhook, or a legacy scheduled runner.
 5. The tenant website remains canonical and serves crawlable static or server-rendered pages.
 
+## Workspace-wide requests
+
+When the user asks to configure all projects in a SEODrafts workspace:
+
+1. Authenticate once, then run `list-projects` before changing any repository or CMS.
+2. Match every SEODrafts project to a repository, CMS, or publishing owner that is actually accessible in the current agent workspace.
+3. Configure every reachable project using the strongest supported path in this skill.
+4. Do not claim that an unrelated repository or external CMS was configured when it was not accessible. Report it as requiring a separate agent session or credential handoff.
+5. Finish with a short per-project status: configured, already healthy, or blocked with the exact next action.
+
 ## Keep the skill and CLI current
 
 Do this once at the start of a new setup session, not before every command:
