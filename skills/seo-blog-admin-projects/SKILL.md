@@ -2,7 +2,7 @@
 name: seo-blog-admin-projects
 description: Connect a customer-owned website to SEODrafts, detect its real publishing stack, configure project context, and prepare secure Git, CMS, or webhook publishing.
 metadata:
-  version: 1.2.0
+  version: 1.3.0
   public-source: https://raw.githubusercontent.com/Wotaso/seodrafts-agent-skills/main/skills/seo-blog-admin-projects/SKILL.md
 ---
 
@@ -123,6 +123,17 @@ Supported tenant-facing flows:
 - Report a health heartbeat from the real scheduled publisher runner.
 
 For Git-backed tenant websites, the usual setup is **Project → Website publishing → GitHub App**: grant one repository, select it, verify the detected content and route mapping in the one-time setup PR, and merge it. No scheduled workflow or tenant publish-token secret is created.
+
+Coding agents authenticated with an owner/admin CLI token can run the same account-scoped setup without navigating the dashboard:
+
+```sh
+npx --yes @wotaso/seo-blog-admin-cli@latest github status example
+npx --yes @wotaso/seo-blog-admin-cli@latest github install example
+npx --yes @wotaso/seo-blog-admin-cli@latest github repositories example --installation-id 123
+npx --yes @wotaso/seo-blog-admin-cli@latest github configure example --installation-id 123 --repository-id 456
+```
+
+The install command prints a short-lived GitHub authorization URL. The repository and configure commands remain restricted to installations already linked to the authenticated SEODrafts workspace. Never accept an installation or repository ID that the account-scoped repository list did not return.
 
 The legacy fallback setup is:
 
