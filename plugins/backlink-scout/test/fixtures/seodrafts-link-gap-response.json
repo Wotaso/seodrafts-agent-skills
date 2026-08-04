@@ -1,0 +1,49 @@
+{
+  "success": true,
+  "rawCount": 3,
+  "providerCostUsd": 0.024108,
+  "providerOperation": "backlinks_domain_intersection_live",
+  "prospects": [
+    {
+      "source_domain": "resources.example.org",
+      "source_page_url": "https://resources.example.org/",
+      "relevance_score": 70,
+      "quality_score": 82,
+      "outreach_priority": 76,
+      "reason": "Links to two competitor targets but not the project.",
+      "raw_payload": {
+        "source": "dataforseo_link_gap",
+        "intersectionsCount": 2,
+        "backlinks": 41,
+        "spamScore": 3
+      }
+    },
+    {
+      "sourceDomain": "quality.example.net",
+      "sourcePageUrl": "https://quality.example.net/",
+      "relevanceScore": 58,
+      "qualityScore": 75,
+      "outreachPriority": 67,
+      "reason": "Links to one competitor target but not the project.",
+      "rawPayload": {
+        "source": "dataforseo_link_gap",
+        "intersectionsCount": 1,
+        "backlinks": 12,
+        "spamScore": 6
+      }
+    },
+    {
+      "sourceDomain": "resources.example.org",
+      "sourcePageUrl": "https://resources.example.org/duplicate",
+      "relevanceScore": 58,
+      "qualityScore": 60,
+      "outreachPriority": 59,
+      "rawPayload": {
+        "source": "dataforseo_link_gap",
+        "intersectionsCount": 1,
+        "backlinks": 2,
+        "spamScore": 10
+      }
+    }
+  ]
+}

@@ -16,6 +16,10 @@ The skill is installed into the current project under `.agents/skills/`. It then
 
 - [`seo-blog-admin-projects`](skills/seo-blog-admin-projects/SKILL.md) — detect the real website stack, configure SEODrafts projects, and prepare Git, CMS, or webhook publishing without putting secrets in browser code or committed files.
 
+## Included plugins
+
+- [`backlink-scout`](plugins/backlink-scout/README.md) — discover, verify, score, and prepare legitimate backlink opportunities with deterministic reports, explicit paid-provider budgets, and no link spam or automatic outreach.
+
 ## Updates
 
 Update the project-local copy with:

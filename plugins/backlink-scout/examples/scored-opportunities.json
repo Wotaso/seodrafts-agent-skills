@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-08-03T22:42:24.269Z",
+  "project": {
+    "domain": "seodrafts.com",
+    "targetUrl": "https://seodrafts.com/"
+  },
+  "policy": {
+    "mode": "white_hat_free_only",
+    "freeOnly": true,
+    "externalActionRequiresExplicitRequest": true,
+    "guarantees": []
+  },
+  "summary": {
+    "researched": 2,
+    "unique": 2,
+    "eligible": 1,
+    "manualReview": 0,
+    "rejected": 1,
+    "duplicates": 0
+  },
+  "candidates": [
+    {
+      "sourceDomain": "example.org",
+      "sourcePageUrl": "https://example.org/seo-tools",
+      "submissionUrl": "https://example.org/submit",
+      "opportunityType": "tool_collection",
+      "topicalRelevance": 86,
+      "editorialQuality": 78,
+      "sourceTrust": 72,
+      "audienceFit": 82,
+      "indexability": 80,
+      "free": true,
+      "linkAttribute": "unknown",
+      "requiresAccount": false,
+      "requiresManualReview": true,
+      "evidence": [
+        {
+          "url": "https://example.org/submit",
+          "observation": "Fixture evidence: the example submission page accepts relevant SEO tools without a placement fee.",
+          "checkedAt": "2026-08-04T10:00:00.000Z"
+        }
+      ],
+      "riskFlags": [],
+      "existingLink": false,
+      "score": 81,
+      "qualificationStatus": "eligible",
+      "priority": "P0",
+      "qualificationReasons": [
+        "Current evidence meets the configured relevance, quality, trust, audience, indexability, and free-placement thresholds."
+      ]
+    },
+    {
+      "sourceDomain": "links.example",
+      "sourcePageUrl": "https://links.example/buy-links",
+      "submissionUrl": "https://links.example/checkout",
+      "opportunityType": "other",
+      "topicalRelevance": 60,
+      "editorialQuality": 15,
+      "sourceTrust": 10,
+      "audienceFit": 30,
+      "indexability": 70,
+      "free": false,
+      "linkAttribute": "dofollow",
+      "requiresAccount": true,
+      "requiresManualReview": true,
+      "evidence": [
+        {
+          "url": "https://links.example/checkout",
+          "observation": "Fixture evidence: the page sells followed placements and has no editorial relevance requirement.",
+          "checkedAt": "2026-08-04T10:00:00.000Z"
+        }
+      ],
+      "riskFlags": [
+        "paid_link"
+      ],
+      "existingLink": false,
+      "score": 34,
+      "qualificationStatus": "rejected",
+      "priority": "excluded",
+      "qualificationReasons": [
+        "Hard-rejection risk: paid_link.",
+        "The opportunity is not free.",
+        "Topical relevance or audience fit is too weak."
+      ]
+    }
+  ],
+  "duplicates": []
+}

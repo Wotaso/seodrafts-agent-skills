@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "project": {
+    "domain": "seodrafts.com",
+    "targetUrl": "https://seodrafts.com/"
+  },
+  "constraints": {
+    "freeOnly": true
+  },
+  "candidates": [
+    {
+      "sourceDomain": "example.org",
+      "sourcePageUrl": "https://example.org/seo-tools",
+      "submissionUrl": "https://example.org/submit",
+      "opportunityType": "tool_collection",
+      "topicalRelevance": 86,
+      "editorialQuality": 78,
+      "sourceTrust": 72,
+      "audienceFit": 82,
+      "indexability": 80,
+      "free": true,
+      "linkAttribute": "unknown",
+      "requiresAccount": false,
+      "requiresManualReview": true,
+      "evidence": [
+        {
+          "url": "https://example.org/submit",
+          "observation": "Fixture evidence: the example submission page accepts relevant SEO tools without a placement fee.",
+          "checkedAt": "2026-08-04T10:00:00.000Z"
+        }
+      ],
+      "riskFlags": []
+    },
+    {
+      "sourceDomain": "links.example",
+      "sourcePageUrl": "https://links.example/buy-links",
+      "submissionUrl": "https://links.example/checkout",
+      "opportunityType": "other",
+      "topicalRelevance": 60,
+      "editorialQuality": 15,
+      "sourceTrust": 10,
+      "audienceFit": 30,
+      "indexability": 70,
+      "free": false,
+      "linkAttribute": "dofollow",
+      "requiresAccount": true,
+      "requiresManualReview": true,
+      "evidence": [
+        {
+          "url": "https://links.example/checkout",
+          "observation": "Fixture evidence: the page sells followed placements and has no editorial relevance requirement.",
+          "checkedAt": "2026-08-04T10:00:00.000Z"
+        }
+      ],
+      "riskFlags": [
+        "paid_link"
+      ]
+    }
+  ]
+}

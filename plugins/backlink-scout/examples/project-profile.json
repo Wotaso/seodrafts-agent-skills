@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "project": {
+    "name": "SEODrafts",
+    "domain": "seodrafts.com",
+    "targetUrl": "https://seodrafts.com/",
+    "category": "SEO workflow software",
+    "description": "A review-first SEO content operations workflow for teams that publish on their own website.",
+    "audiences": [
+      "B2B SaaS content teams",
+      "small SEO teams"
+    ],
+    "topics": [
+      "SEO operations",
+      "content review workflow",
+      "canonical publishing"
+    ],
+    "tags": [
+      "b2b_saas",
+      "marketing"
+    ],
+    "locales": [
+      "en-US",
+      "de-DE"
+    ],
+    "countries": [
+      "US",
+      "Germany"
+    ],
+    "competitors": []
+  },
+  "constraints": {
+    "freeOnly": true,
+    "minCandidates": 40,
+    "minVerified": 15,
+    "maxCandidates": 100,
+    "maxQueries": 60,
+    "excludedTypes": [
+      "paid_link",
+      "mass_ugc",
+      "link_exchange"
+    ]
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "name": "backlink-scout",
+  "version": "1.2.0",
+  "description": "Find, qualify, enrich, and prepare legitimate backlink opportunities for real websites.",
+  "author": {
+    "name": "Wotaso GmbH",
+    "email": "contact@wotaso.com",
+    "url": "https://seodrafts.com"
+  },
+  "homepage": "https://seodrafts.com/agents/",
+  "repository": "https://github.com/Wotaso/seodrafts-agent-skills",
+  "license": "MIT",
+  "keywords": [
+    "seo",
+    "backlinks",
+    "link-building",
+    "browser-automation",
+    "seodrafts"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Backlink Scout",
+    "shortDescription": "Find defensible backlink opportunities.",
+    "longDescription": "Builds up to 150 project-specific backlink candidates with catalog breadth and budget-guarded DataForSEO link-gap signals, verifies the strongest sources in the browser, and prepares compliant submissions without link spam or fabricated claims.",
+    "developerName": "Wotaso GmbH",
+    "category": "Productivity",
+    "capabilities": [
+      "Web research",
+      "Optional DataForSEO enrichment",
+      "Browser verification",
+      "Deterministic scoring",
+      "Submission preparation"
+    ],
+    "websiteURL": "https://seodrafts.com",
+    "privacyPolicyURL": "https://seodrafts.com/privacy.html",
+    "termsOfServiceURL": "https://seodrafts.com/terms.html",
+    "defaultPrompt": [
+      "Find free backlink opportunities for my website.",
+      "Verify and score backlink candidates for this project.",
+      "Prepare safe directory submissions for my product."
+    ],
+    "brandColor": "#171717"
+  }
+}
