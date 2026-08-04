@@ -33,6 +33,17 @@ export const HARD_RISK_FLAGS = new Set([
 ]);
 
 const LINK_ATTRIBUTES = new Set(['dofollow', 'nofollow', 'sponsored', 'ugc', 'mixed', 'unknown']);
+const ACTION_CHANNELS = new Set([
+  'public_form',
+  'editorial_email',
+  'account_submission',
+  'contact_form',
+  'partner_application',
+  'guest_post',
+  'podcast_guest',
+  'passive_earning',
+  'manual_review',
+]);
 const QUALIFICATION_ORDER = new Map([
   ['eligible', 0],
   ['manual_review', 1],
@@ -607,6 +618,21 @@ const normalizeRawCandidate = (value, index, projectDomain, projectTargetUrl) =>
       ? clampScore(candidate.targetPageFit)
       : NaN;
   if (!Number.isFinite(targetPageFit)) throw new Error(`candidates[${index}].targetPageFit must be a number from 0 to 100.`);
+  const actionChannel = ACTION_CHANNELS.has(candidate.actionChannel)
+    ? candidate.actionChannel
+    : candidate.opportunityType === 'editorial_pitch'
+      ? 'editorial_email'
+      : candidate.requiresAccount === true
+        ? 'account_submission'
+        : candidate.submissionUrl
+          ? 'public_form'
+          : 'manual_review';
+  const effortMinutes = candidate.effortMinutes === undefined
+    ? 30
+    : Number.isFinite(Number(candidate.effortMinutes))
+      ? Math.max(0, Math.min(10_080, Math.round(Number(candidate.effortMinutes))))
+      : NaN;
+  if (!Number.isFinite(effortMinutes)) throw new Error(`candidates[${index}].effortMinutes must be a number from 0 to 10080.`);
   return {
     ...candidate,
     ...scores,
@@ -623,11 +649,15 @@ const normalizeRawCandidate = (value, index, projectDomain, projectTargetUrl) =>
     riskFlags,
     targetUrl,
     targetPageFit,
+    actionChannel,
+    effortMinutes,
+    requiresFounderAppearance: candidate.requiresFounderAppearance === true,
     sameDomainAsProject: sourceDomain === projectDomain || sourceDomain.endsWith(`.${projectDomain}`),
   };
 };
 
-const scoreCandidate = (candidate, freeOnly) => {
+const scoreCandidate = (candidate, constraints) => {
+  const freeOnly = constraints.freeOnly;
   const hardRisks = candidate.riskFlags.filter((flag) => HARD_RISK_FLAGS.has(flag));
   const unknownRisks = candidate.riskFlags.filter((flag) => !HARD_RISK_FLAGS.has(flag));
   const reasons = [];
@@ -653,6 +683,14 @@ const scoreCandidate = (candidate, freeOnly) => {
     hardReject = true;
     reasons.push('Topical relevance or audience fit is too weak.');
   }
+  if (constraints.excludedActionChannels.has(candidate.actionChannel)) {
+    hardReject = true;
+    reasons.push(`The configured campaign excludes the ${candidate.actionChannel} action channel.`);
+  }
+  if (!constraints.allowFounderAppearances && candidate.requiresFounderAppearance) {
+    hardReject = true;
+    reasons.push('The configured campaign excludes opportunities that require a founder appearance.');
+  }
 
   const baseScore =
     candidate.topicalRelevance * 0.25 +
@@ -664,6 +702,9 @@ const scoreCandidate = (candidate, freeOnly) => {
     (candidate.free === true ? 100 : 35) * 0.05;
   const frictionPenalty = (candidate.requiresAccount ? 2 : 0) + (!candidate.submissionUrl ? 3 : 0);
   const score = clampScore(baseScore - frictionPenalty);
+  const effortPenalty = Math.min(20, Math.round(candidate.effortMinutes / 30) * 2);
+  const executionScore = clampScore(score - effortPenalty);
+  const exceedsEffortLimit = constraints.maxEffortMinutes !== null && candidate.effortMinutes > constraints.maxEffortMinutes;
 
   let qualificationStatus = 'manual_review';
   if (hardReject || score < 45) qualificationStatus = 'rejected';
@@ -682,21 +723,25 @@ const scoreCandidate = (candidate, freeOnly) => {
   if (!hardReject && candidate.free === null) reasons.push('Free eligibility is not yet verified.');
   if (!hardReject && !candidate.submissionUrl) reasons.push('No current public submission workflow was verified.');
   if (!hardReject && candidate.targetPageFit < 45) reasons.push('The proposed target page is not yet a strong enough match for the source audience and intent.');
+  if (!hardReject && exceedsEffortLimit) reasons.push(`Estimated effort (${candidate.effortMinutes} minutes) exceeds the configured ${constraints.maxEffortMinutes}-minute low-effort limit.`);
   if (unknownRisks.length) reasons.push(`Unknown risk flags require review: ${unknownRisks.join(', ')}.`);
   if (!reasons.length) reasons.push('Current evidence meets the configured relevance, audience, target-page fit, quality, trust, indexability, and free-placement thresholds.');
 
+  if (qualificationStatus === 'eligible' && exceedsEffortLimit) qualificationStatus = 'manual_review';
+
   const priority = qualificationStatus === 'rejected'
     ? 'excluded'
-    : score >= 80
+    : executionScore >= 80
       ? 'P0'
-      : score >= 70
+      : executionScore >= 70
         ? 'P1'
-        : score >= 60
+        : executionScore >= 60
           ? 'P2'
           : 'research';
+  const effortBand = candidate.effortMinutes <= 15 ? 'quick_win' : candidate.effortMinutes <= 45 ? 'low' : candidate.effortMinutes <= 120 ? 'medium' : 'high';
 
   const { sameDomainAsProject: _sameDomainAsProject, ...cleanCandidate } = candidate;
-  return { ...cleanCandidate, score, qualificationStatus, priority, qualificationReasons: reasons };
+  return { ...cleanCandidate, score, executionScore, effortBand, qualificationStatus, priority, qualificationReasons: reasons };
 };
 
 const duplicateKey = (candidate) => {
@@ -714,9 +759,20 @@ export const scoreOpportunities = (input, options = {}) => {
   if (!Array.isArray(payload.candidates)) throw new Error('candidates must be an array.');
 
   const freeOnly = options.freeOnly ?? payload.constraints?.freeOnly ?? true;
+  const maxEffortValue = options.maxEffortMinutes ?? payload.constraints?.maxEffortMinutes;
+  const maxEffortMinutes = maxEffortValue === undefined || maxEffortValue === null
+    ? null
+    : Math.max(0, Math.min(10_080, Math.round(Number(maxEffortValue))));
+  if (maxEffortMinutes !== null && !Number.isFinite(maxEffortMinutes)) throw new Error('constraints.maxEffortMinutes must be a number from 0 to 10080.');
+  const excludedActionChannels = new Set(uniqueStrings(options.excludedActionChannels ?? payload.constraints?.excludedActionChannels));
+  for (const channel of excludedActionChannels) {
+    if (!ACTION_CHANNELS.has(channel)) throw new Error(`constraints.excludedActionChannels contains unsupported channel: ${channel}.`);
+  }
+  const allowFounderAppearances = options.allowFounderAppearances ?? payload.constraints?.allowFounderAppearances ?? true;
+  const constraints = { freeOnly, maxEffortMinutes, excludedActionChannels, allowFounderAppearances };
   const scored = payload.candidates.map((candidate, index) => scoreCandidate(
     normalizeRawCandidate(candidate, index, projectDomain, project.targetUrl),
-    freeOnly
+    constraints
   ));
   const winners = new Map();
   const duplicates = [];
@@ -733,7 +789,7 @@ export const scoreOpportunities = (input, options = {}) => {
 
   const candidates = [...winners.values()].sort((a, b) => {
     const statusDelta = QUALIFICATION_ORDER.get(a.qualificationStatus) - QUALIFICATION_ORDER.get(b.qualificationStatus);
-    return statusDelta || b.score - a.score || a.sourceDomain.localeCompare(b.sourceDomain);
+    return statusDelta || b.executionScore - a.executionScore || b.score - a.score || a.sourceDomain.localeCompare(b.sourceDomain);
   });
   const summary = {
     researched: payload.candidates.length,
@@ -751,6 +807,9 @@ export const scoreOpportunities = (input, options = {}) => {
     policy: {
       mode: 'white_hat_free_only',
       freeOnly: Boolean(freeOnly),
+      maxEffortMinutes,
+      excludedActionChannels: [...excludedActionChannels],
+      allowFounderAppearances: Boolean(allowFounderAppearances),
       externalActionRequiresExplicitRequest: true,
       guarantees: [],
     },
@@ -799,6 +858,11 @@ export const reportToCsv = (report) => {
     'priority',
     'qualificationStatus',
     'score',
+    'executionScore',
+    'effortBand',
+    'effortMinutes',
+    'actionChannel',
+    'requiresFounderAppearance',
     'sourceDomain',
     'opportunityType',
     'sourcePageUrl',

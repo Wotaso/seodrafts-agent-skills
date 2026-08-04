@@ -60,6 +60,9 @@ const candidate = (overrides = {}) => ({
   linkAttribute: 'unknown',
   requiresAccount: false,
   requiresManualReview: true,
+  actionChannel: 'public_form',
+  effortMinutes: 10,
+  requiresFounderAppearance: false,
   evidence: [{
     url: 'https://quality.example.org/submit',
     observation: 'The current public form accepts relevant content workflow tools without a listing charge.',
@@ -235,6 +238,32 @@ test('qualifies a strong free opportunity and rejects paid links', () => {
   assert.equal(report.candidates[1].qualificationStatus, 'rejected');
   assert.match(report.candidates[1].qualificationReasons.join(' '), /paid_link|not free/);
   assert.deepEqual(validateScoredReport(report), { valid: true, candidates: 2, eligible: 1 });
+});
+
+test('prioritizes low-effort wins and excludes configured founder appearances', () => {
+  const report = scoreOpportunities({
+    schemaVersion: 1,
+    project: { domain: 'example.com', targetUrl: 'https://example.com/' },
+    constraints: {
+      freeOnly: true,
+      maxEffortMinutes: 45,
+      allowFounderAppearances: false,
+      excludedActionChannels: ['podcast_guest'],
+    },
+    candidates: [
+      candidate({ sourceDomain: 'form.example.org', actionChannel: 'public_form', effortMinutes: 10 }),
+      candidate({ sourceDomain: 'email.example.org', sourcePageUrl: 'https://email.example.org/resources', submissionUrl: 'https://email.example.org/contact', actionChannel: 'editorial_email', effortMinutes: 35 }),
+      candidate({ sourceDomain: 'podcast.example.org', sourcePageUrl: 'https://podcast.example.org/about', submissionUrl: 'https://podcast.example.org/contact', actionChannel: 'podcast_guest', effortMinutes: 120, requiresFounderAppearance: true }),
+    ],
+  }, { generatedAt: checkedAt });
+
+  assert.equal(report.candidates[0].sourceDomain, 'form.example.org');
+  assert.equal(report.candidates[0].effortBand, 'quick_win');
+  assert.ok(report.candidates[0].executionScore > report.candidates[1].executionScore);
+  const podcast = report.candidates.find((item) => item.sourceDomain === 'podcast.example.org');
+  assert.equal(podcast.qualificationStatus, 'rejected');
+  assert.match(podcast.qualificationReasons.join(' '), /podcast_guest|founder appearance/);
+  assert.deepEqual(report.policy.excludedActionChannels, ['podcast_guest']);
 });
 
 test('deduplicates the same submission target and keeps the stronger observation', () => {

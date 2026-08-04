@@ -70,7 +70,7 @@ Use cheap, direct evidence first:
 5. For a workspace-wide request, enumerate reachable projects first and report inaccessible ones as blocked rather than inventing their domains.
 6. Compare campaign claims with the current public website, store listing, pricing posture, and—when available—the current distributed build. Record the result in `launch-readiness.json`. Research may continue while the gate is blocked, but preparation and submission must stop until the mismatch or untested claim is resolved.
 
-Create `project-profile.json` according to the reference schema. Default `freeOnly` to `true`, `minCandidates` to 40, `minVerified` to 15, `maxCandidates` to 150, `maxQueries` to 60, and exclude manipulative types.
+Create `project-profile.json` according to the reference schema. Default `freeOnly` to `true`, `minCandidates` to 40, `minVerified` to 15, `maxCandidates` to 150, `maxQueries` to 60, and exclude manipulative types. Record campaign preferences such as `maxEffortMinutes`, `allowFounderAppearances`, and `excludedActionChannels`; do not recommend podcasts or guest appearances when the project excludes them.
 
 ### 2. Generate the search plan
 
@@ -191,6 +191,7 @@ Directly verify at least 15 of the most promising candidates per project before 
 - whether a listing already exists;
 - whether a visible link is plausible and whether its attribute is known, unknown, nofollow, sponsored, or UGC;
 - whether the proposed target URL is live, canonical, directly useful to the source audience, and materially stronger than the homepage;
+- the action channel, conservative effort estimate, and whether the next step needs a founder appearance;
 - the exact observation and check timestamp.
 
 Do not invent DA, DR, PageRank, traffic, indexing, or link attributes. If a metric is unavailable, leave it unknown. A current direct observation is stronger than a generic SEO metric.
@@ -225,6 +226,8 @@ The deterministic score weights are:
 - 10% indexability/visibility evidence;
 - 5% verified free eligibility;
 - small friction deductions for an account requirement or missing public submission URL.
+
+The report also computes an `executionScore` with a bounded effort penalty. Use it to order equally qualified opportunities for low-effort campaigns; do not let low effort override weak topical relevance or poor editorial quality.
 
 Nofollow does not create an automatic penalty. Useful discovery, referral traffic, entity corroboration, and a real audience can matter even when a link does not pass ranking signals.
 

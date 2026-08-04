@@ -9,6 +9,8 @@ It is deliberately not a mass link generator. It rejects paid link schemes, priv
 - builds a project-specific opportunity search plan;
 - searches audience publications, niche resources, and editorial surfaces before generic directories;
 - maps opportunities to a useful deep-link target and scores the target-page fit;
+- records the action channel and estimated effort, then prioritizes low-effort wins without weakening quality thresholds;
+- excludes podcasts, guest appearances, or other channels when the project profile opts out;
 - expands a curated 88-source catalog and optional link-gap signals into as many as 150 deduplicated suggestions per project;
 - optionally expands competitor link gaps through DataForSEO behind explicit local and server-side cost guards;
 - researches directories, resource pages, associations, ecosystems, integrations, and editorial opportunities;
