@@ -15,6 +15,14 @@
       "content review workflow",
       "canonical publishing"
     ],
+    "linkableAssets": [
+      {
+        "url": "https://seodrafts.com/features/editorial-review",
+        "topic": "content review workflow",
+        "audiences": ["B2B SaaS content teams", "small SEO teams"],
+        "assetType": "solution guide"
+      }
+    ],
     "tags": [
       "b2b_saas",
       "marketing"

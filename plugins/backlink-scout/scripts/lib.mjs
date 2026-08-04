@@ -129,8 +129,46 @@ export const buildSearchPlan = (input, options = {}) => {
   const audiences = uniqueStrings(project.audiences).slice(0, 3);
   const countries = uniqueStrings(project.countries).slice(0, 3);
   const competitors = uniqueStrings(project.competitors).map(normalizeDomain).filter(Boolean).slice(0, 5);
+  const linkableAssets = asArray(project.linkableAssets).map((value, index) => {
+    const asset = requireObject(value, `project.linkableAssets[${index}]`);
+    const url = canonicalUrl(asset.url);
+    if (!url || normalizeDomain(url) !== project.domain) {
+      throw new Error(`project.linkableAssets[${index}].url must be a canonical URL on ${project.domain}.`);
+    }
+    return {
+      url,
+      topic: String(asset.topic ?? '').trim() || category,
+      audiences: uniqueStrings(asset.audiences),
+      assetType: String(asset.assetType ?? 'resource').trim() || 'resource',
+    };
+  }).slice(0, 20);
   const seeds = [];
-  const add = (query, opportunityType, rationale) => seeds.push({ query: query.replace(/\s+/g, ' ').trim(), opportunityType, rationale });
+  const add = (query, opportunityType, rationale, targetUrl = project.targetUrl, priorityTier = 'supporting') => seeds.push({
+    query: query.replace(/\s+/g, ' ').trim(),
+    opportunityType,
+    rationale,
+    targetUrl: canonicalUrl(targetUrl) || project.targetUrl,
+    priorityTier,
+  });
+
+  for (const topic of topics) {
+    const target = linkableAssets.find((asset) => asset.topic.toLowerCase().includes(topic.toLowerCase()))?.url ?? project.targetUrl;
+    add(`${quoted(topic)} magazine apps`, 'editorial_pitch', `Find publications already serving readers interested in “${topic}”.`, target, 'audience_first');
+    add(`${quoted(topic)} guide recommended tools`, 'resource_page', `Find useful guides whose readers would benefit from the matched “${topic}” page.`, target, 'audience_first');
+    add(`${quoted(topic)} newsletter submit resource`, 'editorial_pitch', `Find niche newsletters with a legitimate resource-suggestion path for “${topic}”.`, target, 'audience_first');
+    add(`${quoted(topic)} professional resources apps`, 'resource_page', `Find professional or enthusiast resource hubs for “${topic}”.`, target, 'audience_first');
+  }
+  for (const audience of audiences) {
+    const target = linkableAssets.find((asset) => asset.audiences.some((item) => item.toLowerCase().includes(audience.toLowerCase())))?.url ?? project.targetUrl;
+    add(`${quoted(audience)} publications recommended tools`, 'editorial_pitch', `Find publications written for the actual audience “${audience}”.`, target, 'audience_first');
+    add(`${quoted(audience)} guides resources apps`, 'resource_page', `Find audience resources where the matched page can help “${audience}”.`, target, 'audience_first');
+    add(`${quoted(audience)} association resources`, 'association', `Find genuine audience or professional associations serving “${audience}”.`, target, 'audience_first');
+  }
+  for (const asset of linkableAssets) {
+    add(`${quoted(asset.topic)} ${quoted(asset.assetType)} recommended`, 'resource_page', `Find pages that can cite the live ${asset.assetType} instead of the homepage.`, asset.url, 'deep_link');
+    add(`${quoted(asset.topic)} intitle:resources`, 'resource_page', `Find relevant resource pages for the live target ${asset.url}.`, asset.url, 'deep_link');
+    add(`${quoted(asset.topic)} intitle:"best tools"`, 'editorial_pitch', `Find editorial roundups whose intent matches the live target ${asset.url}.`, asset.url, 'deep_link');
+  }
 
   add(`${quoted(category)} tools directory submit`, 'niche_directory', 'Find category-specific directories with a public submission workflow.');
   add(`${quoted(category)} software directory add product`, 'niche_directory', 'Find real product listings rather than generic profile pages.');
@@ -215,6 +253,12 @@ export const buildSearchPlan = (input, options = {}) => {
         consecutiveLowYieldBatches: 3,
         lowYieldThreshold: 0.10,
       },
+    },
+    strategy: {
+      audienceSpecificTop30Minimum: 18,
+      generalDirectoryTop30Maximum: 7,
+      homepageIsFallback: true,
+      deepLinkTargets: linkableAssets,
     },
     queries,
   };
@@ -536,7 +580,7 @@ const validateEvidence = (value, index) => asArray(value).map((item, evidenceInd
   };
 });
 
-const normalizeRawCandidate = (value, index, projectDomain) => {
+const normalizeRawCandidate = (value, index, projectDomain, projectTargetUrl) => {
   const candidate = requireObject(value, `candidates[${index}]`);
   const sourcePageUrl = canonicalUrl(candidate.sourcePageUrl);
   if (!sourcePageUrl) throw new Error(`candidates[${index}].sourcePageUrl must be an absolute HTTP(S) URL.`);
@@ -553,6 +597,16 @@ const normalizeRawCandidate = (value, index, projectDomain) => {
   const evidence = validateEvidence(candidate.evidence, index);
   if (!evidence.length) throw new Error(`candidates[${index}].evidence must contain at least one current observation.`);
   const riskFlags = uniqueStrings(candidate.riskFlags).map((flag) => flag.toLowerCase().replace(/[^a-z0-9]+/g, '_'));
+  const targetUrl = canonicalUrl(candidate.targetUrl || projectTargetUrl);
+  if (!targetUrl || normalizeDomain(targetUrl) !== projectDomain) {
+    throw new Error(`candidates[${index}].targetUrl must be a canonical URL on ${projectDomain}.`);
+  }
+  const targetPageFit = candidate.targetPageFit === undefined
+    ? 50
+    : Number.isFinite(Number(candidate.targetPageFit))
+      ? clampScore(candidate.targetPageFit)
+      : NaN;
+  if (!Number.isFinite(targetPageFit)) throw new Error(`candidates[${index}].targetPageFit must be a number from 0 to 100.`);
   return {
     ...candidate,
     ...scores,
@@ -567,6 +621,8 @@ const normalizeRawCandidate = (value, index, projectDomain) => {
     requiresManualReview: candidate.requiresManualReview !== false,
     evidence,
     riskFlags,
+    targetUrl,
+    targetPageFit,
     sameDomainAsProject: sourceDomain === projectDomain || sourceDomain.endsWith(`.${projectDomain}`),
   };
 };
@@ -599,10 +655,11 @@ const scoreCandidate = (candidate, freeOnly) => {
   }
 
   const baseScore =
-    candidate.topicalRelevance * 0.30 +
-    candidate.editorialQuality * 0.20 +
-    candidate.sourceTrust * 0.20 +
-    candidate.audienceFit * 0.15 +
+    candidate.topicalRelevance * 0.25 +
+    candidate.audienceFit * 0.20 +
+    candidate.targetPageFit * 0.15 +
+    candidate.editorialQuality * 0.15 +
+    candidate.sourceTrust * 0.10 +
     candidate.indexability * 0.10 +
     (candidate.free === true ? 100 : 35) * 0.05;
   const frictionPenalty = (candidate.requiresAccount ? 2 : 0) + (!candidate.submissionUrl ? 3 : 0);
@@ -617,14 +674,16 @@ const scoreCandidate = (candidate, freeOnly) => {
     candidate.editorialQuality >= 40 &&
     candidate.sourceTrust >= 40 &&
     candidate.audienceFit >= 45 &&
+    candidate.targetPageFit >= 45 &&
     candidate.indexability >= 40 &&
     unknownRisks.length === 0
   ) qualificationStatus = 'eligible';
 
   if (!hardReject && candidate.free === null) reasons.push('Free eligibility is not yet verified.');
   if (!hardReject && !candidate.submissionUrl) reasons.push('No current public submission workflow was verified.');
+  if (!hardReject && candidate.targetPageFit < 45) reasons.push('The proposed target page is not yet a strong enough match for the source audience and intent.');
   if (unknownRisks.length) reasons.push(`Unknown risk flags require review: ${unknownRisks.join(', ')}.`);
-  if (!reasons.length) reasons.push('Current evidence meets the configured relevance, quality, trust, audience, indexability, and free-placement thresholds.');
+  if (!reasons.length) reasons.push('Current evidence meets the configured relevance, audience, target-page fit, quality, trust, indexability, and free-placement thresholds.');
 
   const priority = qualificationStatus === 'rejected'
     ? 'excluded'
@@ -655,7 +714,10 @@ export const scoreOpportunities = (input, options = {}) => {
   if (!Array.isArray(payload.candidates)) throw new Error('candidates must be an array.');
 
   const freeOnly = options.freeOnly ?? payload.constraints?.freeOnly ?? true;
-  const scored = payload.candidates.map((candidate, index) => scoreCandidate(normalizeRawCandidate(candidate, index, projectDomain), freeOnly));
+  const scored = payload.candidates.map((candidate, index) => scoreCandidate(
+    normalizeRawCandidate(candidate, index, projectDomain, project.targetUrl),
+    freeOnly
+  ));
   const winners = new Map();
   const duplicates = [];
   for (const candidate of scored) {
@@ -709,6 +771,8 @@ export const validateScoredReport = (input) => {
   for (const [index, candidate] of asArray(report.candidates).entries()) {
     if (!normalizeDomain(candidate.sourceDomain)) errors.push(`candidates[${index}].sourceDomain is invalid.`);
     if (!isHttpUrl(candidate.sourcePageUrl)) errors.push(`candidates[${index}].sourcePageUrl is invalid.`);
+    if (!isHttpUrl(candidate.targetUrl) || normalizeDomain(candidate.targetUrl) !== normalizeDomain(report.project?.domain)) errors.push(`candidates[${index}].targetUrl must be on the project domain.`);
+    if (!Number.isFinite(candidate.targetPageFit) || candidate.targetPageFit < 0 || candidate.targetPageFit > 100) errors.push(`candidates[${index}].targetPageFit must be 0–100.`);
     if (!OPPORTUNITY_TYPES.has(candidate.opportunityType)) errors.push(`candidates[${index}].opportunityType is unsupported.`);
     if (!['eligible', 'manual_review', 'rejected'].includes(candidate.qualificationStatus)) errors.push(`candidates[${index}].qualificationStatus is invalid.`);
     if (!Number.isFinite(candidate.score) || candidate.score < 0 || candidate.score > 100) errors.push(`candidates[${index}].score must be 0–100.`);
@@ -739,6 +803,8 @@ export const reportToCsv = (report) => {
     'opportunityType',
     'sourcePageUrl',
     'submissionUrl',
+    'targetUrl',
+    'targetPageFit',
     'free',
     'linkAttribute',
     'topicalRelevance',

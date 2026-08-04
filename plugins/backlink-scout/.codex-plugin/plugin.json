@@ -1,6 +1,6 @@
 {
   "name": "backlink-scout",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Find, qualify, enrich, and prepare legitimate backlink opportunities for real websites.",
   "author": {
     "name": "Wotaso GmbH",
@@ -21,7 +21,7 @@
   "interface": {
     "displayName": "Backlink Scout",
     "shortDescription": "Find defensible backlink opportunities.",
-    "longDescription": "Builds up to 150 project-specific backlink candidates with catalog breadth and budget-guarded DataForSEO link-gap signals, verifies the strongest sources in the browser, and prepares compliant submissions without link spam or fabricated claims.",
+    "longDescription": "Builds up to 150 project-specific backlink candidates with audience-first niche research, deep-link target matching, catalog breadth, and budget-guarded DataForSEO link-gap signals, then verifies and prepares compliant opportunities without link spam or fabricated claims.",
     "developerName": "Wotaso GmbH",
     "category": "Productivity",
     "capabilities": [

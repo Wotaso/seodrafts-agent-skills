@@ -2,7 +2,7 @@
 name: backlink-scout
 description: Find, verify, score, prepare, and—only when explicitly requested—submit legitimate free backlink opportunities for a real website. Use for backlink research, link-gap qualification, relevant directories, resource pages, associations, partner ecosystems, launch listings, unlinked mentions, and safe browser-assisted submissions. Reject paid links, PBNs, fake reviews, mass outreach, irrelevant profiles, and link spam.
 metadata:
-  version: 1.2.0
+  version: 1.3.0
   developer: Wotaso GmbH
   website: https://seodrafts.com
 ---
@@ -16,6 +16,7 @@ Find the best defensible link opportunities for each project. Automate research,
 Read these references before the corresponding action:
 
 - Data fields, allowed opportunity types, and risk flags: [references/opportunity-schema.md](references/opportunity-schema.md)
+- Niche-source priority, source-mix limits, and deep-link selection: [references/niche-and-deep-links.md](references/niche-and-deep-links.md)
 - Any preparation, browser form interaction, outreach decision, or submission: [references/submission-policy.md](references/submission-policy.md)
 
 Resolve the directory containing this `SKILL.md`. The deterministic helper scripts live at `../../scripts/` relative to it. Use them instead of inventing scoring or report formats.
@@ -65,7 +66,7 @@ Use cheap, direct evidence first:
 1. Read the current repository, project config, existing marketing pages, sitemap, public docs, and any supplied project context.
 2. Open the canonical public website and verify its current title, description, product category, audience, core pages, pricing posture, integrations, company identity, and geographic relevance.
 3. Record only public, factual proof points. Mark unknown fields as unknown; never infer customer counts, awards, founding dates, locations, integrations, prices, certifications, or testimonials.
-4. Identify the most useful target URL. Default to the canonical homepage only when no more relevant stable page or linkable asset exists.
+4. Inventory stable linkable assets and match each discovery theme to the most useful target URL. Default to the canonical homepage only when no relevant stable deep page exists.
 5. For a workspace-wide request, enumerate reachable projects first and report inaccessible ones as blocked rather than inventing their domains.
 6. Compare campaign claims with the current public website, store listing, pricing posture, and—when available—the current distributed build. Record the result in `launch-readiness.json`. Research may continue while the gate is blocked, but preparation and submission must stop until the mismatch or untested claim is resolved.
 
@@ -104,16 +105,21 @@ node <plugin-root>/scripts/expand-source-catalog.mjs \
 
 Search the current web. Prefer the following opportunity families, roughly in this order:
 
-1. real partner or integration ecosystems;
-2. industry associations and member/resource directories;
-3. highly relevant niche tool collections and resource pages;
-4. reputable local or regional business ecosystems when the company is genuinely eligible;
-5. startup, launch, software, or review platforms with a real matching category;
+1. publications, newsletters, guides, and resource pages already serving the project's real audience;
+2. highly relevant niche tool collections and editorial roundups with a plausible reader benefit;
+3. real partner or integration ecosystems;
+4. industry associations and member/resource directories;
+5. app-platform, local, or regional ecosystems when the project is genuinely eligible;
 6. unlinked brand mentions;
 7. competitor link-gap sources that also make editorial sense for this project;
-8. broken-link replacements only when the target already has an actually equivalent, useful resource.
+8. startup, launch, software, or review platforms with a real matching category;
+9. broken-link replacements only when the target already has an actually equivalent, useful resource.
 
 Reject generic lists merely because they have a submission form. A relevant audience and plausible reader benefit are mandatory.
+
+For the top 30 researched candidates, target at least 60% audience-specific niche/editorial/resource opportunities and no more than 25% general startup, launch, software, or AI directories while enough relevant niche sources remain. This is a research-mix guardrail, not permission to add weak sources to reach a percentage.
+
+Assign every researched candidate a stable `targetUrl` and a `targetPageFit` score. The linked page must answer the source page's reader need. Prefer a feature page, guide, comparison, calculator, gallery, dataset, or other real asset over the homepage. If the best target page does not exist yet, mark the candidate `asset_required` and specify the proposed canonical path; do not pitch or submit the missing page.
 
 For each project, build a broad queue before deep qualification. Unless the user explicitly requests a smaller run, target at least:
 
@@ -184,6 +190,7 @@ Directly verify at least 15 of the most promising candidates per project before 
 - the page is not an obvious link farm, PBN, thin mass directory, or UGC spam surface;
 - whether a listing already exists;
 - whether a visible link is plausible and whether its attribute is known, unknown, nofollow, sponsored, or UGC;
+- whether the proposed target URL is live, canonical, directly useful to the source audience, and materially stronger than the homepage;
 - the exact observation and check timestamp.
 
 Do not invent DA, DR, PageRank, traffic, indexing, or link attributes. If a metric is unavailable, leave it unknown. A current direct observation is stronger than a generic SEO metric.
@@ -210,10 +217,11 @@ node <plugin-root>/scripts/validate-report.mjs \
 
 The deterministic score weights are:
 
-- 30% topical relevance;
-- 20% editorial quality;
-- 20% source trust based on observed site quality;
-- 15% audience fit;
+- 25% topical relevance;
+- 20% audience fit;
+- 15% target-page fit;
+- 15% editorial quality;
+- 10% source trust based on observed site quality;
 - 10% indexability/visibility evidence;
 - 5% verified free eligibility;
 - small friction deductions for an account requirement or missing public submission URL.

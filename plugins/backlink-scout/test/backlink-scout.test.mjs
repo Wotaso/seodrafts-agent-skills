@@ -32,6 +32,12 @@ const projectProfile = {
     category: 'content operations software',
     audiences: ['B2B content teams'],
     topics: ['editorial workflow'],
+    linkableAssets: [{
+      url: 'https://example.com/editorial-workflow-guide',
+      topic: 'editorial workflow',
+      audiences: ['B2B content teams'],
+      assetType: 'guide',
+    }],
     countries: ['Germany'],
     competitors: ['competitor.test'],
   },
@@ -42,6 +48,8 @@ const candidate = (overrides = {}) => ({
   sourceDomain: 'quality.example.org',
   sourcePageUrl: 'https://quality.example.org/tools',
   submissionUrl: 'https://quality.example.org/submit',
+  targetUrl: 'https://example.com/editorial-workflow-guide',
+  targetPageFit: 90,
   opportunityType: 'tool_collection',
   topicalRelevance: 88,
   editorialQuality: 78,
@@ -72,11 +80,25 @@ test('builds a bounded project-specific search plan', () => {
   assert.ok(plan.queries.length >= 40);
   assert.ok(plan.queries.length <= 60);
   assert.ok(plan.queries.some((item) => item.query.includes('editorial workflow')));
+  assert.ok(plan.queries.some((item) => item.priorityTier === 'deep_link'));
+  assert.ok(plan.queries.some((item) => item.targetUrl === 'https://example.com/editorial-workflow-guide'));
   assert.ok(plan.queries.some((item) => item.query.includes('Germany')));
   assert.equal(new Set(plan.queries.map((item) => item.query)).size, plan.queries.length);
   assert.equal(plan.discoveryTargets.uniqueCandidates, 40);
   assert.equal(plan.discoveryTargets.directlyVerified, 15);
   assert.equal(plan.constraints.maxCandidates, 40);
+  assert.equal(plan.strategy.audienceSpecificTop30Minimum, 18);
+  assert.equal(plan.strategy.generalDirectoryTop30Maximum, 7);
+});
+
+test('rejects cross-domain linkable assets in a project profile', () => {
+  assert.throws(() => buildSearchPlan({
+    ...projectProfile,
+    project: {
+      ...projectProfile.project,
+      linkableAssets: [{ url: 'https://other.example/guide', topic: 'editorial workflow' }],
+    },
+  }), /must be a canonical URL on example\.com/);
 });
 
 test('expands the source catalog to at least 40 unique project candidates', () => {
@@ -242,6 +264,30 @@ test('does not penalize a useful nofollow opportunity', () => {
     candidates: [candidate({ linkAttribute: 'nofollow' })],
   }, { generatedAt: checkedAt });
   assert.equal(nofollow.candidates[0].score, unknown.candidates[0].score);
+});
+
+test('prioritizes a strong deep-page match over a generic target', () => {
+  const report = scoreOpportunities({
+    schemaVersion: 1,
+    project: { domain: 'example.com', targetUrl: 'https://example.com/' },
+    candidates: [
+      candidate(),
+      candidate({
+        sourceDomain: 'generic.example.net',
+        sourcePageUrl: 'https://generic.example.net/tools',
+        submissionUrl: 'https://generic.example.net/submit',
+        targetUrl: 'https://example.com/',
+        targetPageFit: 20,
+      }),
+    ],
+  }, { generatedAt: checkedAt });
+
+  const matched = report.candidates.find((item) => item.sourceDomain === 'quality.example.org');
+  const generic = report.candidates.find((item) => item.sourceDomain === 'generic.example.net');
+  assert.ok(matched.score > generic.score);
+  assert.equal(matched.qualificationStatus, 'eligible');
+  assert.equal(generic.qualificationStatus, 'manual_review');
+  assert.match(generic.qualificationReasons.join(' '), /target page/);
 });
 
 test('requires direct dated evidence and emits spreadsheet-safe CSV', () => {
