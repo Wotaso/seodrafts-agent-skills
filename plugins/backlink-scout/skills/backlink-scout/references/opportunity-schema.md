@@ -16,6 +16,14 @@ Use schema version `1` for profiles and opportunity reports.
     "description": "A factual one-sentence description.",
     "audiences": ["content teams"],
     "topics": ["SEO operations"],
+    "linkableAssets": [
+      {
+        "url": "https://example.com/seo-workflow-guide",
+        "topic": "SEO workflow",
+        "audiences": ["content teams"],
+        "assetType": "guide"
+      }
+    ],
     "tags": ["b2b_saas", "marketing"],
     "locales": ["en-US"],
     "countries": ["US"],
@@ -23,6 +31,9 @@ Use schema version `1` for profiles and opportunity reports.
   },
   "constraints": {
     "freeOnly": true,
+    "maxEffortMinutes": 45,
+    "allowFounderAppearances": false,
+    "excludedActionChannels": ["podcast_guest"],
     "minCandidates": 40,
     "minVerified": 15,
     "maxCandidates": 100,
@@ -62,6 +73,8 @@ Never pass `discovery_seed` entries directly to browser submission or the determ
       "sourceDomain": "directory.example",
       "sourcePageUrl": "https://directory.example/category",
       "submissionUrl": "https://directory.example/submit",
+      "targetUrl": "https://example.com/seo-workflow-guide",
+      "targetPageFit": 92,
       "opportunityType": "niche_directory",
       "topicalRelevance": 80,
       "editorialQuality": 70,
@@ -72,6 +85,9 @@ Never pass `discovery_seed` entries directly to browser submission or the determ
       "linkAttribute": "unknown",
       "requiresAccount": true,
       "requiresManualReview": true,
+      "actionChannel": "account_submission",
+      "effortMinutes": 30,
+      "requiresFounderAppearance": false,
       "evidence": [
         {
           "url": "https://directory.example/submit",
@@ -86,6 +102,8 @@ Never pass `discovery_seed` entries directly to browser submission or the determ
 ```
 
 Scores are observations on a 0–100 scale, not third-party domain authority metrics. Do not label them DR, DA, PageRank, or a search-engine ranking factor.
+
+`targetUrl` must be a canonical page on the project domain. `targetPageFit` measures how directly that page serves the source page's real audience and intent. When a proposed target is not live, add `asset_required`; research may continue but preparation and submission must stop for that candidate.
 
 Allowed `opportunityType` values:
 
@@ -103,6 +121,10 @@ Allowed `opportunityType` values:
 - `review_platform`
 - `launch_platform`
 - `other`
+
+Allowed `actionChannel` values are `public_form`, `editorial_email`, `account_submission`, `contact_form`, `partner_application`, `guest_post`, `podcast_guest`, `passive_earning`, and `manual_review`. `effortMinutes` is a conservative estimate for the next useful action. Use `requiresFounderAppearance: true` for podcasts, webinars, interviews, events, or any route that needs the founder to appear live.
+
+`score` remains the quality score. `executionScore` subtracts a bounded effort penalty and orders candidates within the same qualification status. Set `constraints.maxEffortMinutes` to move higher-effort candidates out of the eligible queue. Use `excludedActionChannels` and `allowFounderAppearances: false` to make campaign preferences explicit.
 
 Common hard-rejection `riskFlags`:
 

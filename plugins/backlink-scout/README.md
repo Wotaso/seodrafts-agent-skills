@@ -1,12 +1,16 @@
 # Backlink Scout
 
-Backlink Scout is a free Codex skill from [SEODrafts](https://seodrafts.com). It builds a broad project-specific queue of at least 40 backlink candidates, verifies the strongest sources, scores each directly observed candidate with evidence, and prepares legitimate submissions.
+Backlink Scout is a free Codex skill from [SEODrafts](https://seodrafts.com). It builds a broad project-specific queue of at least 40 backlink candidates, prioritizes publications and resources that already serve the project's audience, maps every qualified opportunity to the best matching page, verifies the strongest sources, and prepares legitimate submissions.
 
 It is deliberately not a mass link generator. It rejects paid link schemes, private blog networks, fake reviews, comment spam, irrelevant profiles, forced link exchanges, and automated cold outreach.
 
 ## What it does
 
 - builds a project-specific opportunity search plan;
+- searches audience publications, niche resources, and editorial surfaces before generic directories;
+- maps opportunities to a useful deep-link target and scores the target-page fit;
+- records the action channel and estimated effort, then prioritizes low-effort wins without weakening quality thresholds;
+- excludes podcasts, guest appearances, or other channels when the project profile opts out;
 - expands a curated 88-source catalog and optional link-gap signals into as many as 150 deduplicated suggestions per project;
 - optionally expands competitor link gaps through DataForSEO behind explicit local and server-side cost guards;
 - researches directories, resource pages, associations, ecosystems, integrations, and editorial opportunities;
